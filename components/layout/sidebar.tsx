@@ -76,7 +76,7 @@ export function Sidebar({
       <aside
         className={`fixed left-0 top-0 z-50 flex h-screen w-[290px] flex-col border-r border-zinc-200 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-transform duration-300 xl:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } xl:static xl:z-30`}
+        }`}
       >
         <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-5">
           <div>

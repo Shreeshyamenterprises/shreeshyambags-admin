@@ -39,13 +39,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#f6f7fb] text-zinc-900 antialiased">
-        <div className="flex min-h-screen">
+        <div className="min-h-screen xl:pl-[290px]">
           <Sidebar
             mobileOpen={mobileOpen}
             onClose={() => setMobileOpen(false)}
           />
 
-          <main className="min-w-0 flex-1">
+          <main className="min-w-0">
             <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
               {children}
             </div>

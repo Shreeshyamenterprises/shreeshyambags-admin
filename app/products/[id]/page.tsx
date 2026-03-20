@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toggle } from "@/components/ui/toggle";
+import { Toast } from "@/components/ui/toast";
 
 type ProductImage = {
   id: string;
@@ -58,21 +59,6 @@ type ToastState = {
   type: "success" | "error";
 } | null;
 
-function ToastInline({ toast }: { toast: ToastState }) {
-  if (!toast) return null;
-
-  return (
-    <div
-      className={`rounded-2xl px-4 py-3 text-sm font-medium ${
-        toast.type === "success"
-          ? "bg-green-50 text-green-700 ring-1 ring-green-100"
-          : "bg-red-50 text-red-700 ring-1 ring-red-100"
-      }`}
-    >
-      {toast.message}
-    </div>
-  );
-}
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
@@ -431,7 +417,7 @@ export default function ProductEditorPage() {
         subtitle="Manage product details, upload images, update variants and review pricing tiers."
       />
 
-      <ToastInline toast={toast} />
+      <Toast toast={toast} onClose={() => setToast(null)} />
 
       {loading ? (
         <div className="space-y-4">
@@ -508,6 +494,7 @@ export default function ProductEditorPage() {
                 <UploadProductImageForm
                   productId={id}
                   onSuccess={loadProduct}
+                  onToast={setToast}
                 />
               </div>
             </div>
@@ -525,7 +512,7 @@ export default function ProductEditorPage() {
               </div>
 
               <div className="mt-5 rounded-[1.5rem] bg-zinc-50 p-5 ring-1 ring-zinc-100">
-                <AddVariantForm productId={id} onSuccess={loadProduct} />
+                <AddVariantForm productId={id} onSuccess={loadProduct} onToast={setToast} />
               </div>
             </div>
           </div>
