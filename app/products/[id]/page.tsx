@@ -56,7 +56,7 @@ type Product = {
 
 type ToastState = {
   message: string;
-  type: "success" | "error";
+  type: "success" | "error" | "info" | "warning";
 } | null;
 
 
