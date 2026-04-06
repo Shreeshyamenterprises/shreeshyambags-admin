@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -141,7 +140,8 @@ function ProductRow({
           <div className="flex items-center gap-4">
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-zinc-100 ring-1 ring-zinc-200">
               {imageUrl ? (
-                <Image src={imageUrl} alt={product.title} fill className="object-cover" />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={imageUrl} alt={product.title} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <ImageIcon className="h-5 w-5 text-zinc-300" />

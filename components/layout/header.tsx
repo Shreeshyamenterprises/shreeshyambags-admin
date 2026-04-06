@@ -85,7 +85,7 @@ export function Header({ title, subtitle, onOpenSidebar }: HeaderProps) {
 
               <div className="hidden text-left sm:block">
                 <p className="text-sm font-semibold text-zinc-900">Admin</p>
-                <p className="text-xs text-zinc-500">Shree Shyam Bags</p>
+                <p className="text-xs text-zinc-500">PieBags Admin</p>
               </div>
 
               <ChevronDown className="h-4 w-4 text-zinc-500" />
@@ -103,7 +103,7 @@ export function Header({ title, subtitle, onOpenSidebar }: HeaderProps) {
                         Admin
                       </p>
                       <p className="text-xs text-zinc-500">
-                        admin@shreeshyambags.com
+                        admin@piebags.in
                       </p>
                     </div>
                   </div>
