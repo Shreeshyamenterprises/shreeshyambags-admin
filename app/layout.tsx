@@ -17,16 +17,18 @@ export default function RootLayout({
 
   const isLoginPage = pathname === "/login";
   const isForgotPasswordPage = pathname === "/forgot-password";
+  const isResetPasswordPage = pathname === "/reset-password";
+  const isPublicPage = isLoginPage || isForgotPasswordPage || isResetPasswordPage;
 
   useEffect(() => {
-    if (isLoginPage || isForgotPasswordPage) return;
+    if (isPublicPage) return;
 
     if (!isAdminLoggedIn()) {
       router.replace("/login");
     }
-  }, [pathname, router, isLoginPage, isForgotPasswordPage]);
+  }, [pathname, router, isPublicPage]);
 
-  if (isLoginPage || isForgotPasswordPage) {
+  if (isPublicPage) {
     return (
       <html lang="en">
         <body className="bg-[#f6f7fb] text-zinc-900 antialiased">
