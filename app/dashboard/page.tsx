@@ -313,7 +313,7 @@ export default function DashboardPage() {
             </div>
 
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Shree Shyam Bags Admin
+              Econest Packaging Admin
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-7 text-zinc-400">
               Manage your product catalog, bulk quote requests, order fulfilment
