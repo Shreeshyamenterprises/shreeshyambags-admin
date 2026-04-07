@@ -348,7 +348,7 @@ export default function AdminLoginPage() {
                 <p className="mt-6 text-center text-sm text-zinc-600 lg:text-left">
                   Need customer access?{" "}
                   <Link
-                    href="http://localhost:3000/login"
+                    href={process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3001"}
                     className="font-semibold text-pink-600 transition hover:text-pink-700"
                   >
                     Go to website login
