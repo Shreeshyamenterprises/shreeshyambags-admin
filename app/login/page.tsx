@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
             <div className="relative hidden min-h-[760px] overflow-hidden bg-zinc-900 lg:block">
               <Image
                 src="/signup-bag-sample.jpg"
-                alt="PieBags Admin"
+                alt="Econest Packaging Admin"
                 fill
                 className="object-cover opacity-45"
                 priority
@@ -149,7 +149,7 @@ export default function AdminLoginPage() {
                     Manage products, quotes, orders and premium packaging flow.
                   </h1>
                   <p className="mt-5 max-w-md text-sm leading-7 text-zinc-300">
-                    Login to access the PieBags admin workspace for
+                    Login to access the Econest Packaging admin workspace for
                     catalog management, pricing tiers, bulk quote handling and
                     order updates.
                   </p>

@@ -84,7 +84,7 @@ export function Sidebar({
               Admin Panel
             </p>
             <h1 className="mt-1 text-xl font-bold tracking-tight text-zinc-900">
-              PieBags
+              Econest Packaging
             </h1>
           </div>
 
