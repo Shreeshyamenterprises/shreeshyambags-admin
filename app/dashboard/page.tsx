@@ -15,7 +15,6 @@ import {
   XCircle,
   CheckCircle2,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { api } from "@/lib/api";
 import { getAdminToken } from "@/lib/auth";
 
@@ -276,10 +275,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <Header
-        title="Dashboard"
-        subtitle="Live overview of your non-woven bag catalog, quotes and orders."
-      />
 
       {/* ── Error Banner ── */}
       {error && (

@@ -14,7 +14,6 @@ import {
   ShoppingCart,
   User,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { api } from "@/lib/api";
 import { getAdminToken } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -319,10 +318,6 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <Header
-        title="Orders"
-        subtitle="Track customer orders, fulfilment status and delivery progress."
-      />
 
       {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
 

@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Package,
   PlusSquare,
   ShoppingCart,
   FileText,
+  LogOut,
   X,
 } from "lucide-react";
+import { getAdminToken, removeAdminToken } from "@/lib/auth";
 
 const navItems = [
   {
@@ -63,6 +66,38 @@ export function Sidebar({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [profile, setProfile] = useState<{
+    name: string;
+    email: string;
+    initials: string;
+  } | null>(null);
+
+  useEffect(() => {
+    try {
+      const token = getAdminToken();
+      if (!token) return;
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setProfile({
+        name: payload?.name || "Admin",
+        email: payload?.email || "",
+        initials: (payload?.name || "A")
+          .split(" ")
+          .map((w: string) => w[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2),
+      });
+    } catch {
+      // leave null
+    }
+  }, []);
+
+  function handleLogout() {
+    removeAdminToken();
+    router.push("/login");
+  }
 
   return (
     <>
@@ -138,14 +173,26 @@ export function Sidebar({
           </div>
         </div>
 
-        <div className="border-t border-zinc-200 px-5 py-4">
-          <div className="rounded-2xl bg-zinc-50 p-4 ring-1 ring-zinc-100">
-            <p className="text-xs uppercase tracking-[0.16em] text-zinc-400">
-              Workspace
-            </p>
-            <p className="mt-2 text-sm font-semibold text-zinc-900">
-              Production Admin
-            </p>
+        <div className="border-t border-zinc-200 px-4 py-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 ring-1 ring-zinc-100">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-100 text-sm font-bold text-pink-600">
+              {profile?.initials ?? "A"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-zinc-900">
+                {profile?.name ?? "Admin"}
+              </p>
+              {profile?.email && (
+                <p className="truncate text-xs text-zinc-400">{profile.email}</p>
+              )}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="shrink-0 rounded-xl p-2 text-zinc-400 transition hover:bg-red-50 hover:text-red-500"
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>
