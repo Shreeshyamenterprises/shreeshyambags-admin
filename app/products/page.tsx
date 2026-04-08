@@ -98,12 +98,12 @@ function StatCard({
 
 function ProductRow({
   product,
-  onRefresh,
+  onToggle,
   onDeleteRequest,
   onToast,
 }: {
   product: Product;
-  onRefresh: () => void;
+  onToggle: (id: string, isActive: boolean) => void;
   onDeleteRequest: (p: Product) => void;
   onToast: (t: ToastState) => void;
 }) {
@@ -112,20 +112,22 @@ function ProductRow({
   const imageUrl = product.images?.[0]?.url;
 
   async function toggleProduct() {
+    const newState = !product.isActive;
+    onToggle(product.id, newState);
     try {
       setToggling(true);
       const token = getAdminToken();
       await api.patch(
         `/admin/products/${product.id}`,
-        { isActive: !product.isActive },
+        { isActive: newState },
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onToast({
-        message: `Product ${!product.isActive ? "activated" : "deactivated"}.`,
+        message: `Product ${newState ? "activated" : "deactivated"}.`,
         type: "success",
       });
-      onRefresh();
     } catch (err: any) {
+      onToggle(product.id, !newState);
       onToast({ message: err?.response?.data?.message || "Failed to update.", type: "error" });
     } finally {
       setToggling(false);
@@ -510,7 +512,11 @@ export default function ProductsPage() {
                   <ProductRow
                     key={p.id}
                     product={p}
-                    onRefresh={loadProducts}
+                    onToggle={(id, isActive) =>
+                      setProducts((prev) =>
+                        prev.map((x) => (x.id === id ? { ...x, isActive } : x))
+                      )
+                    }
                     onDeleteRequest={setDeleteTarget}
                     onToast={setToast}
                   />
