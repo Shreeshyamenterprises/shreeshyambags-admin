@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { getAdminToken } from "@/lib/auth";
-import { Header } from "@/components/layout/header";
 import { Toggle } from "@/components/ui/toggle";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,6 +45,7 @@ type Product = {
   variants: Variant[];
   images?: ProductImage[];
 };
+
 // ── StatCard ──────────────────────────────────────────────────────────────────
 
 function StatCard({
@@ -98,12 +98,16 @@ function StatCard({
 
 function ProductRow({
   product,
-  onRefresh,
+  selected,
+  onSelect,
+  onToggle,
   onDeleteRequest,
   onToast,
 }: {
   product: Product;
-  onRefresh: () => void;
+  selected: boolean;
+  onSelect: (id: string, checked: boolean) => void;
+  onToggle: (id: string, isActive: boolean) => void;
   onDeleteRequest: (p: Product) => void;
   onToast: (t: ToastState) => void;
 }) {
@@ -112,20 +116,22 @@ function ProductRow({
   const imageUrl = product.images?.[0]?.url;
 
   async function toggleProduct() {
+    const newState = !product.isActive;
+    onToggle(product.id, newState);
     try {
       setToggling(true);
       const token = getAdminToken();
       await api.patch(
         `/admin/products/${product.id}`,
-        { isActive: !product.isActive },
+        { isActive: newState },
         { headers: { Authorization: `Bearer ${token}` } },
       );
       onToast({
-        message: `Product ${!product.isActive ? "activated" : "deactivated"}.`,
-        type: "success",
+        message: `Product ${newState ? "activated" : "deactivated"}.`,
+        type: newState ? "success" : "error",
       });
-      onRefresh();
     } catch (err: any) {
+      onToggle(product.id, !newState);
       onToast({ message: err?.response?.data?.message || "Failed to update.", type: "error" });
     } finally {
       setToggling(false);
@@ -134,7 +140,21 @@ function ProductRow({
 
   return (
     <>
-      <tr className="border-b border-zinc-50 transition hover:bg-zinc-50/60">
+      <tr
+        className={`border-b border-zinc-50 transition hover:bg-zinc-50/60 ${
+          selected ? "bg-pink-50/40" : ""
+        }`}
+      >
+        {/* Checkbox */}
+        <td className="pl-5 pr-2 py-4">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={(e) => onSelect(product.id, e.target.checked)}
+            className="h-4 w-4 cursor-pointer rounded border-zinc-300 accent-pink-500"
+          />
+        </td>
+
         {/* Product */}
         <td className="px-5 py-4">
           <div className="flex items-center gap-4">
@@ -149,7 +169,12 @@ function ProductRow({
               )}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-zinc-900">{product.title}</p>
+              <Link
+                href={`/products/${product.id}`}
+                className="truncate text-sm font-semibold text-zinc-900 transition hover:text-pink-600"
+              >
+                {product.title}
+              </Link>
               <p className="mt-0.5 truncate text-xs text-zinc-400">{product.slug}</p>
             </div>
           </div>
@@ -192,7 +217,9 @@ function ProductRow({
         <td className="px-5 py-4">
           <div className="flex items-center gap-2.5">
             <Toggle checked={product.isActive} onChange={toggleProduct} />
-            {toggling && <RefreshCw className="h-3.5 w-3.5 animate-spin text-zinc-400" />}
+            <span className="flex h-4 w-4 items-center justify-center">
+              {toggling && <RefreshCw className="h-3.5 w-3.5 animate-spin text-zinc-400" />}
+            </span>
           </div>
         </td>
 
@@ -230,7 +257,7 @@ function ProductRow({
 
       {expanded && (
         <tr className="bg-zinc-50/70">
-          <td colSpan={6} className="px-5 py-5">
+          <td colSpan={7} className="px-5 py-5">
             <div className="grid gap-4 lg:grid-cols-2">
               {/* Info */}
               <div className="rounded-2xl bg-white p-5 ring-1 ring-zinc-100">
@@ -313,8 +340,11 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [bulkAction, setBulkAction] = useState<"delete" | "activate" | "deactivate" | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
   useEffect(() => { loadProducts(); }, []);
@@ -333,6 +363,7 @@ export default function ProductsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(res.data ?? []);
+      setSelected(new Set());
     } catch (err: any) {
       setToast({ message: err?.response?.data?.message || "Failed to load products.", type: "error" });
     } finally {
@@ -342,19 +373,57 @@ export default function ProductsPage() {
 
   async function deleteProduct() {
     if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
       setDeleting(true);
       const token = getAdminToken();
-      await api.delete(`/admin/products/${deleteTarget.id}`, {
+      await api.delete(`/admin/products/${target.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setProducts((prev) => prev.filter((p) => p.id !== target.id));
+      setSelected((prev) => { const s = new Set(prev); s.delete(target.id); return s; });
       setToast({ message: "Product deleted.", type: "success" });
-      setDeleteTarget(null);
-      loadProducts();
     } catch (err: any) {
       setToast({ message: err?.response?.data?.message || "Failed to delete.", type: "error" });
+      loadProducts();
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function executeBulkAction() {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    setBulkAction(null);
+
+    try {
+      setBulkProcessing(true);
+      const token = getAdminToken();
+      const headers = { Authorization: `Bearer ${token}` };
+
+      if (bulkAction === "delete") {
+        await api.post("/admin/products/bulk-delete", { ids }, { headers });
+        setProducts((prev) => prev.filter((p) => !ids.includes(p.id)));
+        setSelected(new Set());
+        setToast({ message: `${ids.length} product${ids.length > 1 ? "s" : ""} deleted.`, type: "success" });
+      } else {
+        const isActive = bulkAction === "activate";
+        await api.patch("/admin/products/bulk-status", { ids, isActive }, { headers });
+        setProducts((prev) =>
+          prev.map((p) => ids.includes(p.id) ? { ...p, isActive } : p)
+        );
+        setSelected(new Set());
+        setToast({
+          message: `${ids.length} product${ids.length > 1 ? "s" : ""} ${isActive ? "activated" : "deactivated"}.`,
+          type: isActive ? "success" : "error",
+        });
+      }
+    } catch (err: any) {
+      setToast({ message: err?.response?.data?.message || "Bulk action failed.", type: "error" });
+      loadProducts();
+    } finally {
+      setBulkProcessing(false);
     }
   }
 
@@ -368,6 +437,25 @@ export default function ProductsPage() {
     [products, search],
   );
 
+  const allSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+  const someSelected = filtered.some((p) => selected.has(p.id));
+
+  function toggleSelectAll(checked: boolean) {
+    setSelected((prev) => {
+      const s = new Set(prev);
+      filtered.forEach((p) => checked ? s.add(p.id) : s.delete(p.id));
+      return s;
+    });
+  }
+
+  function handleSelect(id: string, checked: boolean) {
+    setSelected((prev) => {
+      const s = new Set(prev);
+      checked ? s.add(id) : s.delete(id);
+      return s;
+    });
+  }
+
   const activeCount = products.filter((p) => p.isActive).length;
   const inactiveCount = products.filter((p) => !p.isActive).length;
   const variantCount = products.reduce((a, p) => a + p.variants.length, 0);
@@ -375,14 +463,51 @@ export default function ProductsPage() {
     .flatMap((p) => p.variants)
     .filter((v) => v.stock <= 10).length;
 
+  const selectedCount = selected.size;
+
   return (
     <div className="space-y-6">
-      <Header
-        title="Products"
-        subtitle="Manage your non-woven bag catalog — variants, pricing and visibility."
-      />
 
       {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
+
+      {/* Fixed bulk action bar */}
+      {selectedCount > 0 && (
+        <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl border border-pink-200 bg-white px-5 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/60 backdrop-blur-xl">
+          <span className="text-sm font-semibold text-pink-600">
+            {selectedCount} selected
+          </span>
+          <div className="h-4 w-px bg-zinc-200" />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setBulkAction("activate")}
+              disabled={bulkProcessing}
+              className="rounded-xl bg-green-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-green-600 disabled:opacity-50"
+            >
+              Activate
+            </button>
+            <button
+              onClick={() => setBulkAction("deactivate")}
+              disabled={bulkProcessing}
+              className="rounded-xl bg-zinc-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-zinc-600 disabled:opacity-50"
+            >
+              Deactivate
+            </button>
+            <button
+              onClick={() => setBulkAction("delete")}
+              disabled={bulkProcessing}
+              className="rounded-xl bg-red-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="rounded-xl border border-zinc-300 px-4 py-2 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -488,9 +613,19 @@ export default function ProductsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
+            <table className="w-full min-w-[740px]">
               <thead>
                 <tr className="border-b border-zinc-100">
+                  {/* Select all */}
+                  <th className="pl-5 pr-2 py-3">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                      onChange={(e) => toggleSelectAll(e.target.checked)}
+                      className="h-4 w-4 cursor-pointer rounded border-zinc-300 accent-pink-500"
+                    />
+                  </th>
                   {["Product", "Base Price", "Variants", "Status", "Visibility", "Actions"].map(
                     (h) => (
                       <th
@@ -510,7 +645,13 @@ export default function ProductsPage() {
                   <ProductRow
                     key={p.id}
                     product={p}
-                    onRefresh={loadProducts}
+                    selected={selected.has(p.id)}
+                    onSelect={handleSelect}
+                    onToggle={(id, isActive) =>
+                      setProducts((prev) =>
+                        prev.map((x) => (x.id === id ? { ...x, isActive } : x))
+                      )
+                    }
                     onDeleteRequest={setDeleteTarget}
                     onToast={setToast}
                   />
@@ -521,6 +662,7 @@ export default function ProductsPage() {
         )}
       </div>
 
+      {/* Single delete confirm */}
       <ConfirmDialog
         open={!!deleteTarget}
         title="Delete product?"
@@ -533,11 +675,32 @@ export default function ProductsPage() {
         onConfirm={deleteProduct}
       />
 
-      {deleting && (
+      {/* Bulk action confirm */}
+      <ConfirmDialog
+        open={!!bulkAction}
+        title={
+          bulkAction === "delete"
+            ? `Delete ${selectedCount} product${selectedCount > 1 ? "s" : ""}?`
+            : bulkAction === "activate"
+            ? `Activate ${selectedCount} product${selectedCount > 1 ? "s" : ""}?`
+            : `Deactivate ${selectedCount} product${selectedCount > 1 ? "s" : ""}?`
+        }
+        description={
+          bulkAction === "delete"
+            ? "This will permanently delete all selected products and their variants. This cannot be undone."
+            : bulkAction === "activate"
+            ? "All selected products will be made visible on the storefront."
+            : "All selected products will be hidden from the storefront."
+        }
+        onCancel={() => setBulkAction(null)}
+        onConfirm={executeBulkAction}
+      />
+
+      {(deleting || bulkProcessing) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 text-sm font-medium text-zinc-700 shadow-xl ring-1 ring-zinc-100">
             <RefreshCw className="h-4 w-4 animate-spin text-pink-500" />
-            Deleting product…
+            {bulkProcessing ? "Processing…" : "Deleting product…"}
           </div>
         </div>
       )}

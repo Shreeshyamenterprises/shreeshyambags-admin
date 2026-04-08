@@ -122,13 +122,13 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f7fb]">
-      <section className="relative overflow-hidden">
+    <main className="h-screen overflow-hidden bg-[#f7f7fb]">
+      <section className="relative h-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-100" />
         <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-pink-200/30 blur-3xl" />
         <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-fuchsia-200/30 blur-3xl" />
 
-        <div className="relative mx-auto flex min-h-screen max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+        <div className="relative mx-auto flex h-full max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid w-full max-w-6xl overflow-hidden rounded-[2.5rem] bg-white shadow-[0_20px_80px_rgba(0,0,0,0.08)] ring-1 ring-white/60 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="relative hidden min-h-[760px] overflow-hidden bg-zinc-900 lg:block">
               <Image

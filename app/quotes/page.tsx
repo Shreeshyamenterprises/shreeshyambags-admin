@@ -10,7 +10,6 @@ import {
   Save,
   Search,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { api } from "@/lib/api";
 import { getAdminToken } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -452,10 +451,6 @@ export default function QuotesPage() {
 
   return (
     <div className="space-y-6">
-      <Header
-        title="Quotes"
-        subtitle="Review, respond and manage bulk quote requests from customers."
-      />
 
       {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
 

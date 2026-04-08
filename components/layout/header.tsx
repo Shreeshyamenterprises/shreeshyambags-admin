@@ -50,10 +50,7 @@ export function Header({ title, subtitle, onOpenSidebar }: HeaderProps) {
           </button>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-pink-500">
-              Admin Workspace
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+            <h2 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
               {title}
             </h2>
             {subtitle ? (
