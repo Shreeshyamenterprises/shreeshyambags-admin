@@ -94,6 +94,152 @@ function StatCard({
   );
 }
 
+// ── MobileProductCard ─────────────────────────────────────────────────────────
+
+function MobileProductCard({
+  product,
+  selected,
+  onSelect,
+  onToggle,
+  onDeleteRequest,
+  onToast,
+}: {
+  product: Product;
+  selected: boolean;
+  onSelect: (id: string, checked: boolean) => void;
+  onToggle: (id: string, isActive: boolean) => void;
+  onDeleteRequest: (p: Product) => void;
+  onToast: (t: ToastState) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [toggling, setToggling] = useState(false);
+  const imageUrl = product.images?.[0]?.url;
+
+  async function toggleProduct() {
+    const newState = !product.isActive;
+    onToggle(product.id, newState);
+    try {
+      setToggling(true);
+      const token = getAdminToken();
+      await api.patch(
+        `/admin/products/${product.id}`,
+        { isActive: newState },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      onToast({ message: `Product ${newState ? "activated" : "deactivated"}.`, type: newState ? "success" : "error" });
+    } catch (err: any) {
+      onToggle(product.id, !newState);
+      onToast({ message: err?.response?.data?.message || "Failed to update.", type: "error" });
+    } finally {
+      setToggling(false);
+    }
+  }
+
+  return (
+    <div className={`overflow-hidden rounded-2xl border transition ${selected ? "border-pink-200 bg-pink-50/30" : "border-zinc-100 bg-white hover:border-zinc-200"}`}>
+      {/* Header row */}
+      <div className="flex items-center gap-3 px-4 py-3">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={(e) => onSelect(product.id, e.target.checked)}
+          className="h-4 w-4 shrink-0 cursor-pointer rounded border-zinc-300 accent-pink-500"
+        />
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-zinc-100 ring-1 ring-zinc-200">
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageUrl} alt={product.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <ImageIcon className="h-4 w-4 text-zinc-300" />
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/products/${product.id}`}
+            className="block truncate text-sm font-semibold text-zinc-900 hover:text-pink-600"
+          >
+            {product.title}
+          </Link>
+          <p className="truncate text-xs text-zinc-400">{product.slug}</p>
+        </div>
+        <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+          product.isActive ? "bg-green-50 text-green-700 ring-1 ring-green-200" : "bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200"
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${product.isActive ? "bg-green-500" : "bg-zinc-400"}`} />
+          {product.isActive ? "Active" : "Off"}
+        </span>
+      </div>
+
+      {/* Info row */}
+      <div className="flex items-center justify-between gap-3 border-t border-zinc-50 px-4 py-2.5">
+        <div className="flex items-center gap-4 text-xs text-zinc-500">
+          <span className="font-semibold text-zinc-900">₹{((product.basePrice ?? 0) / 100).toFixed(2)}</span>
+          <span className="flex items-center gap-1"><Layers className="h-3 w-3" />{product.variants.length} variants</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Toggle checked={product.isActive} onChange={toggleProduct} />
+            {toggling && <RefreshCw className="h-3 w-3 animate-spin text-zinc-400" />}
+          </div>
+          <button
+            onClick={() => setExpanded((p) => !p)}
+            className="flex items-center gap-1 rounded-lg bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-200"
+          >
+            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            {expanded ? "Less" : "More"}
+          </button>
+          <Link href={`/products/${product.id}`}>
+            <button className="rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-700">Edit</button>
+          </Link>
+          <button
+            onClick={() => onDeleteRequest(product)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-red-50 hover:text-red-500"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded */}
+      {expanded && (
+        <div className="border-t border-zinc-100 bg-zinc-50/50 px-4 py-4">
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: "Product ID", value: product.id.slice(-8) },
+              { label: "Images", value: String(product.images?.length ?? 0) },
+              { label: "Base Price", value: `₹${((product.basePrice ?? 0) / 100).toFixed(2)}` },
+              { label: "Status", value: product.isActive ? "Live" : "Hidden" },
+            ].map(({ label, value }) => (
+              <div key={label} className="rounded-xl bg-white p-3 ring-1 ring-zinc-100">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">{label}</p>
+                <p className="mt-0.5 truncate text-sm font-medium text-zinc-800">{value}</p>
+              </div>
+            ))}
+          </div>
+          {product.variants.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">Variants</p>
+              {product.variants.slice(0, 3).map((v) => (
+                <div key={v.id} className="flex items-center justify-between rounded-xl bg-white px-3 py-2 ring-1 ring-zinc-100">
+                  <p className="text-xs font-medium text-zinc-700">{v.size} · {v.color} · {v.shape}</p>
+                  <span className={`text-[10px] font-semibold ${v.isActive ? "text-green-600" : "text-zinc-400"}`}>
+                    {v.isActive ? "Active" : "Off"}
+                  </span>
+                </div>
+              ))}
+              {product.variants.length > 3 && (
+                <p className="text-center text-xs text-zinc-400">+{product.variants.length - 3} more</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── ProductRow ────────────────────────────────────────────────────────────────
 
 function ProductRow({
@@ -472,36 +618,36 @@ export default function ProductsPage() {
 
       {/* Fixed bulk action bar */}
       {selectedCount > 0 && (
-        <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl border border-pink-200 bg-white px-5 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/60 backdrop-blur-xl">
+        <div className="fixed bottom-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-pink-200 bg-white px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-white/60 backdrop-blur-xl sm:top-4 sm:bottom-auto sm:w-auto sm:flex-nowrap sm:gap-3 sm:px-5">
           <span className="text-sm font-semibold text-pink-600">
             {selectedCount} selected
           </span>
-          <div className="h-4 w-px bg-zinc-200" />
-          <div className="flex items-center gap-2">
+          <div className="hidden h-4 w-px bg-zinc-200 sm:block" />
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setBulkAction("activate")}
               disabled={bulkProcessing}
-              className="rounded-xl bg-green-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-green-600 disabled:opacity-50"
+              className="rounded-xl bg-green-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-green-600 disabled:opacity-50 sm:px-4 sm:py-2"
             >
               Activate
             </button>
             <button
               onClick={() => setBulkAction("deactivate")}
               disabled={bulkProcessing}
-              className="rounded-xl bg-zinc-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-zinc-600 disabled:opacity-50"
+              className="rounded-xl bg-zinc-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-zinc-600 disabled:opacity-50 sm:px-4 sm:py-2"
             >
               Deactivate
             </button>
             <button
               onClick={() => setBulkAction("delete")}
               disabled={bulkProcessing}
-              className="rounded-xl bg-red-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+              className="rounded-xl bg-red-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-600 disabled:opacity-50 sm:px-4 sm:py-2"
             >
               Delete
             </button>
             <button
               onClick={() => setSelected(new Set())}
-              className="rounded-xl border border-zinc-300 px-4 py-2 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100"
+              className="rounded-xl border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100 sm:px-4 sm:py-2"
             >
               Clear
             </button>
@@ -510,7 +656,7 @@ export default function ProductsPage() {
       )}
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon={Package}
           iconBg="bg-blue-50"
@@ -549,7 +695,7 @@ export default function ProductsPage() {
 
       {/* Toolbar */}
       <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="flex flex-col gap-4 border-b border-zinc-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-zinc-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-pink-500">
               Catalog
@@ -564,7 +710,7 @@ export default function ProductsPage() {
             </h2>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
               <input
@@ -572,7 +718,7 @@ export default function ProductsPage() {
                 placeholder="Search products…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-pink-400 focus:bg-white focus:ring-2 focus:ring-pink-100 sm:w-72"
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-pink-400 focus:bg-white focus:ring-2 focus:ring-pink-100 sm:w-64"
               />
             </div>
 
@@ -595,15 +741,15 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Mobile cards / Desktop table */}
         {loading ? (
-          <div className="space-y-3 p-6">
+          <div className="space-y-3 p-4 sm:p-6">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-2xl" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <EmptyState
               title={search ? "No products match your search" : "No products yet"}
               description={search ? "Try a different search term." : "Create your first product to get started."}
@@ -612,22 +758,39 @@ export default function ProductsPage() {
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[740px]">
-              <thead>
-                <tr className="border-b border-zinc-100">
-                  {/* Select all */}
-                  <th className="pl-5 pr-2 py-3">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
-                      onChange={(e) => toggleSelectAll(e.target.checked)}
-                      className="h-4 w-4 cursor-pointer rounded border-zinc-300 accent-pink-500"
-                    />
-                  </th>
-                  {["Product", "Base Price", "Variants", "Status", "Visibility", "Actions"].map(
-                    (h) => (
+          <>
+            {/* Mobile card list (< md) */}
+            <div className="space-y-2 p-4 md:hidden">
+              {filtered.map((p) => (
+                <MobileProductCard
+                  key={p.id}
+                  product={p}
+                  selected={selected.has(p.id)}
+                  onSelect={handleSelect}
+                  onToggle={(id, isActive) =>
+                    setProducts((prev) => prev.map((x) => (x.id === id ? { ...x, isActive } : x)))
+                  }
+                  onDeleteRequest={setDeleteTarget}
+                  onToast={setToast}
+                />
+              ))}
+            </div>
+
+            {/* Desktop table (md+) */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[740px]">
+                <thead>
+                  <tr className="border-b border-zinc-100">
+                    <th className="pl-5 pr-2 py-3">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                        onChange={(e) => toggleSelectAll(e.target.checked)}
+                        className="h-4 w-4 cursor-pointer rounded border-zinc-300 accent-pink-500"
+                      />
+                    </th>
+                    {["Product", "Base Price", "Variants", "Status", "Visibility", "Actions"].map((h) => (
                       <th
                         key={h}
                         className={`px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ${
@@ -636,29 +799,27 @@ export default function ProductsPage() {
                       >
                         {h}
                       </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((p) => (
-                  <ProductRow
-                    key={p.id}
-                    product={p}
-                    selected={selected.has(p.id)}
-                    onSelect={handleSelect}
-                    onToggle={(id, isActive) =>
-                      setProducts((prev) =>
-                        prev.map((x) => (x.id === id ? { ...x, isActive } : x))
-                      )
-                    }
-                    onDeleteRequest={setDeleteTarget}
-                    onToast={setToast}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((p) => (
+                    <ProductRow
+                      key={p.id}
+                      product={p}
+                      selected={selected.has(p.id)}
+                      onSelect={handleSelect}
+                      onToggle={(id, isActive) =>
+                        setProducts((prev) => prev.map((x) => (x.id === id ? { ...x, isActive } : x)))
+                      }
+                      onDeleteRequest={setDeleteTarget}
+                      onToast={setToast}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
