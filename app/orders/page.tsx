@@ -117,70 +117,40 @@ function OrderCard({ order }: { order: Order }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-100 bg-white transition hover:border-zinc-200 hover:shadow-sm">
       {/* Summary row */}
-      <div className="flex flex-wrap items-center gap-4 px-5 py-4">
-        {/* Customer */}
-        <div className="min-w-[160px] flex-1">
-          <div className="flex items-center gap-2">
+      <div className="px-4 py-4 sm:px-5">
+        {/* Top: Customer + Status + Expand */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-zinc-100">
               <User className="h-4 w-4 text-zinc-500" />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-zinc-900">{order.shipName}</p>
-              <p className="text-xs text-zinc-400">{order.user?.email ?? "No email"}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-zinc-900">{order.shipName}</p>
+              <p className="truncate text-xs text-zinc-400">{order.user?.email ?? "No email"}</p>
             </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <StatusBadge status={order.status} />
+            <button
+              onClick={() => setExpanded((p) => !p)}
+              className={`flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-medium transition ${
+                expanded ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+              }`}
+            >
+              {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{expanded ? "Close" : "Details"}</span>
+            </button>
           </div>
         </div>
 
-        {/* Location */}
-        <div className="flex min-w-[140px] flex-1 items-center gap-2 text-sm text-zinc-600">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
-          <span>
-            {order.shipCity}, {order.shipState} — {order.shipPincode}
-          </span>
+        {/* Bottom: meta info */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-500">
+          <span className="flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{order.shipCity}, {order.shipState}</span>
+          <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{order.shipPhone}</span>
+          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{date}</span>
+          <span>{order.items.length} {order.items.length === 1 ? "item" : "items"}</span>
+          <span className="font-semibold text-zinc-900">₹{(order.total / 100).toFixed(2)}</span>
         </div>
-
-        {/* Phone */}
-        <div className="flex shrink-0 items-center gap-1.5 text-xs text-zinc-500">
-          <Phone className="h-3 w-3" />
-          {order.shipPhone}
-        </div>
-
-        {/* Items count */}
-        <div className="shrink-0 text-center">
-          <p className="text-sm font-semibold text-zinc-900">{order.items.length}</p>
-          <p className="text-xs text-zinc-400">{order.items.length === 1 ? "item" : "items"}</p>
-        </div>
-
-        {/* Total */}
-        <div className="shrink-0 text-right">
-          <p className="text-sm font-bold text-zinc-900">₹{(order.total / 100).toFixed(2)}</p>
-          <p className="text-xs text-zinc-400">Total</p>
-        </div>
-
-        {/* Status */}
-        <StatusBadge status={order.status} />
-
-        {/* Date */}
-        <div className="flex shrink-0 items-center gap-1 text-xs text-zinc-400">
-          <Clock className="h-3 w-3" />
-          {date}
-        </div>
-
-        {/* Expand */}
-        <button
-          onClick={() => setExpanded((p) => !p)}
-          className={`ml-auto flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition ${
-            expanded
-              ? "bg-zinc-900 text-white"
-              : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-          }`}
-        >
-          {expanded ? (
-            <><ChevronUp className="h-3.5 w-3.5" /> Close</>
-          ) : (
-            <><ChevronDown className="h-3.5 w-3.5" /> Details</>
-          )}
-        </button>
       </div>
 
       {/* Expanded */}
@@ -322,7 +292,7 @@ export default function OrdersPage() {
       {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon={ShoppingCart}
           iconBg="bg-violet-50"
@@ -359,7 +329,7 @@ export default function OrdersPage() {
 
       {/* Toolbar + List */}
       <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="flex flex-col gap-4 border-b border-zinc-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-zinc-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-pink-500">
               Fulfilment
@@ -382,7 +352,7 @@ export default function OrdersPage() {
                 placeholder="Search by name, city, email, status…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-pink-400 focus:bg-white focus:ring-2 focus:ring-pink-100 sm:w-72"
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-pink-400 focus:bg-white focus:ring-2 focus:ring-pink-100 sm:w-64"
               />
             </div>
 

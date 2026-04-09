@@ -109,7 +109,7 @@ export default function NewProductPage() {
       </div>
 
       {/* Main grid */}
-      <form onSubmit={handleSubmit} className="grid gap-5 xl:grid-cols-[1fr_320px]">
+      <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[1fr_300px]">
 
         {/* LEFT — form */}
         <div className="space-y-4">

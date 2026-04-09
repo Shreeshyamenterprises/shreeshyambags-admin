@@ -205,7 +205,7 @@ function VariantCard({
       </div>
 
       {/* Fields */}
-      <div className="grid gap-4 p-5 sm:grid-cols-3">
+      <div className="grid gap-4 p-4 sm:grid-cols-3 sm:p-5">
         <Field label="Retail Price (paise)" error={errors.price} required>
           <input
             type="number"
@@ -478,7 +478,7 @@ export default function ProductEditorPage() {
           </div>
 
           {/* ── Stats row ── */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatChip
               icon={Package}
               label="Product ID"
@@ -506,7 +506,7 @@ export default function ProductEditorPage() {
           </div>
 
           {/* ── Main 2-column layout ── */}
-          <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
 
             {/* LEFT — Product details form */}
             <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-zinc-100">

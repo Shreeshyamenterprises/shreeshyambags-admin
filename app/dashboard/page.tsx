@@ -298,7 +298,7 @@ export default function DashboardPage() {
         <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-pink-500/10" />
         <div className="pointer-events-none absolute -bottom-16 right-32 h-52 w-52 rounded-full bg-pink-400/8" />
 
-        <div className="relative grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+        <div className="relative grid gap-6 md:grid-cols-[1.4fr_0.6fr]">
           <div>
             <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-pink-500/15 px-3.5 py-1.5 ring-1 ring-pink-400/20">
               <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
@@ -400,7 +400,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Stats Grid ── */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon={Package}
           iconBg="bg-blue-50"
@@ -457,7 +457,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Body Grid ── */}
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         {/* Quick Actions */}
         <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-zinc-100">
           <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-5">
